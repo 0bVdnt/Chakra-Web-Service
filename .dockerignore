@@ -1,6 +1,6 @@
+# Node.js dependencies. We will run `npm install` inside the container.
 node_modules
 npm-debug.log
-package-lock.json
 
 # C++ build artifacts. These are generated inside the container.
 build
@@ -9,7 +9,7 @@ build-*
 # Temporary session files created by the server.
 temp_sessions
 
-# Git repository files. These are not needed for the running application.
+# Git repository files.
 .git
 .gitignore
 

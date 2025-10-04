@@ -1,18 +1,23 @@
 {
-  "name": "poc-chakravyuha",
+  "name": "chakra-web-service",
   "version": "1.0.0",
-  "description": "[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)\r [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/0bvdnt/poc-chakravyuha)\r [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-orange.svg)](https://github.com/0bvdnt/poc-chakravyuha)",
+  "description": "A web service demonstrating the Chakravyuha C/C++ obfuscation engine.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "llvm",
+    "obfuscation",
+    "c++",
+    "compiler"
+  ],
+  "author": "0bvdnt",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^5.1.0",
+    "express": "^4.19.2",
     "rimraf": "^3.0.2"
   }
 }
