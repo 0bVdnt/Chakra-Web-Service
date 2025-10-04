@@ -1,0 +1,21 @@
+node_modules
+npm-debug.log
+package-lock.json
+
+# C++ build artifacts. These are generated inside the container.
+build
+build-*
+
+# Temporary session files created by the server.
+temp_sessions
+
+# Git repository files. These are not needed for the running application.
+.git
+.gitignore
+
+# The Dockerfile itself is not needed inside the image.
+Dockerfile
+
+# Any local testing files or documentation.
+README.md
+test_program.c
