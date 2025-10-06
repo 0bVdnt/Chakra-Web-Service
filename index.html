@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chakravyuha | C/C++ Obfuscation Engine</title>
 
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
     <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css">
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
 
@@ -28,7 +28,9 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family:
+                -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -291,8 +293,12 @@
             <div class="section">
                 <h2 class="section-title">Step 1: Provide Your Code</h2>
                 <div class="tabs">
-                    <button class="tab-button active" onclick="showTab('text-input')">Paste Code</button>
-                    <button class="tab-button" onclick="showTab('file-input')">Upload File</button>
+                    <button class="tab-button active" onclick="showTab('text-input')">
+                        Paste Code
+                    </button>
+                    <button class="tab-button" onclick="showTab('file-input')">
+                        Upload File
+                    </button>
                 </div>
                 <div id="text-input-content" class="tab-content active">
                     <textarea id="code-editor"></textarea>
@@ -301,39 +307,44 @@
                     <div id="file-upload-area" onclick="document.getElementById('file-upload').click();">
                         <p id="file-label">Click or drag & drop a .c or .cpp file here</p>
                     </div>
-                    <input type="file" id="file-upload" accept=".c,.cpp">
+                    <input type="file" id="file-upload" accept=".c,.cpp" />
                 </div>
             </div>
 
-            <!-- Step 2: Configure Obfuscation (Simplified) -->
+            <!-- Step 2: Configure Obfuscation -->
             <div class="section">
-                <h2 class="section-title">Step 2: Obfuscation Features</h2>
+                <h2 class="section-title">Step 2: Configure Obfuscation</h2>
                 <div class="config-grid">
-                    <div class="form-group">
-                        <label>Target Platform: Linux (via Docker)</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" checked disabled> String Encryption
-                                <span class="status-tag enabled">ENABLED</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" disabled> Control Flow Flattening
-                                <span class="status-tag soon">COMING SOON</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" disabled> Bogus Code Insertion
-                                <span class="status-tag soon">COMING SOON</span>
-                            </label>
-                        </div>
+                    <!-- String Encryption is always on -->
+                    <div class="config-item-disabled">
+                        <label>String Encryption (Base)</label>
+                        <span>XOR with dynamic key</span>
+                        <span class="status-tag enabled">ALWAYS ON</span>
+                    </div>
+                    code Code
+
+                    <!-- Control Flow Flattening -->
+                    <div class="config-item">
+                        <label for="cff-checkbox">Control Flow Flattening</label>
+                        <span>Obscures program logic with a central dispatcher.</span>
+                        <input type="checkbox" id="cff-checkbox" class="toggle-switch" checked />
+                    </div>
+
+                    <!-- Bogus Code Insertion -->
+                    <div class="config-item">
+                        <label for="bci-checkbox">Bogus Code Insertion</label>
+                        <span>Injects dead or irrelevant code to confuse analysis.</span>
+                        <input type="checkbox" id="bci-checkbox" class="toggle-switch" />
                     </div>
                 </div>
             </div>
-
             <div id="error-container"></div>
 
             <!-- Step 3: Run -->
             <div class="section">
-                <button class="btn" id="obfuscate-btn" onclick="runObfuscation()">Obfuscate Code</button>
+                <button class="btn" id="obfuscate-btn" onclick="runObfuscation()">
+                    Obfuscate Code
+                </button>
             </div>
 
             <!-- Step 4: Results -->
@@ -342,7 +353,9 @@
                 <div id="report-container-wrapper" class="report-container"></div>
                 <div class="download-buttons">
                     <a id="download-binary-btn" class="btn disabled">Download Obfuscated Binary</a>
-                    <button id="download-pdf-btn" class="btn btn-secondary disabled">Save Report as PDF</button>
+                    <button id="download-pdf-btn" class="btn btn-secondary disabled">
+                        Save Report as PDF
+                    </button>
                 </div>
             </div>
         </div>
@@ -350,107 +363,186 @@
 
     <script>
         let editor;
-        let uploadedFileContent = '';
-        const defaultCode = `#include <stdio.h>\n\n// A simple function that contains a critical data string.\nvoid returnPassword() {\n    printf("SUPER_SECRET_STRING");\n}\n\nint main() {\n    returnPassword();\n    return 0;\n}`;
+        let uploadedFileContent = "";
+        const defaultCode = `#include <stdio.h>\n#include <string.h>\n\n// A function with conditional logic to test CFF.\nvoid checkPassword(const char* input) {\n    if (strcmp(input, "MAGIC_WORD") == 0) {\n        printf("Access Granted: SUPER_SECRET_STRING\\n");\n    } else {\n        printf("Access Denied.\\n");\n    }\n}\n\nint main(int argc, char* argv[]) {\n    if (argc > 1) {\n        checkPassword(argv[1]);\n    } else {\n        checkPassword("");\n    }\n    return 0;\n}`;
 
         // IMPORTANT: Replace this with your actual Render.com backend URL
-        const backendUrl = 'https://chakravyuha-backend.onrender.com';
+        const backendUrl = "http://localhost:3001"; // "https://chakra-web-service.onrender.com";
 
         window.onload = function () {
-            if (typeof CodeMirror === 'undefined') {
-                document.body.innerHTML = "<h1>Error: Could not load the code editor. Please check your internet connection and ad-blockers.</h1>";
+            if (typeof CodeMirror === "undefined") {
+                document.body.innerHTML =
+                    "<h1>Error: Could not load the code editor. Please check your internet connection and ad-blockers.</h1>";
                 return;
             }
-            editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), { lineNumbers: true, mode: "text/x-c++src", theme: "material-darker" });
+            editor = CodeMirror.fromTextArea(
+                document.getElementById("code-editor"),
+                {
+                    lineNumbers: true,
+                    mode: "text/x-c++src",
+                    theme: "material-darker",
+                },
+            );
             editor.setValue(defaultCode);
-            const fileUploadArea = document.getElementById('file-upload-area');
-            const fileInput = document.getElementById('file-upload');
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => fileUploadArea.addEventListener(e, p => { p.preventDefault(); p.stopPropagation(); }, false));
-            fileUploadArea.addEventListener('drop', handleFileDrop, false);
-            fileInput.addEventListener('change', handleFileSelect, false);
+            const fileUploadArea = document.getElementById("file-upload-area");
+            const fileInput = document.getElementById("file-upload");
+            ["dragenter", "dragover", "dragleave", "drop"].forEach((e) =>
+                fileUploadArea.addEventListener(
+                    e,
+                    (p) => {
+                        p.preventDefault();
+                        p.stopPropagation();
+                    },
+                    false,
+                ),
+            );
+            fileUploadArea.addEventListener("drop", handleFileDrop, false);
+            fileInput.addEventListener("change", handleFileSelect, false);
         };
 
-        function showTab(tabName) { document.querySelectorAll('.tab-content, .tab-button').forEach(el => el.classList.remove('active')); document.getElementById(`${tabName}-content`).classList.add('active'); document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active'); }
-        function handleFileDrop(event) { if (event.dataTransfer.files.length > 0) readFile(event.dataTransfer.files[0]); }
-        function handleFileSelect(event) { if (event.target.files.length > 0) readFile(event.target.files[0]); }
-        function readFile(file) { const reader = new FileReader(); reader.onload = (e) => { uploadedFileContent = e.target.result; document.getElementById('file-label').textContent = `Loaded: ${file.name}`; }; reader.readAsText(file); }
+        function showTab(tabName) {
+            document
+                .querySelectorAll(".tab-content, .tab-button")
+                .forEach((el) => el.classList.remove("active"));
+            document.getElementById(`${tabName}-content`).classList.add("active");
+            document
+                .querySelector(`[onclick="showTab('${tabName}')"]`)
+                .classList.add("active");
+        }
+        function handleFileDrop(event) {
+            if (event.dataTransfer.files.length > 0)
+                readFile(event.dataTransfer.files[0]);
+        }
+        function handleFileSelect(event) {
+            if (event.target.files.length > 0) readFile(event.target.files[0]);
+        }
+        function readFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedFileContent = e.target.result;
+                document.getElementById("file-label").textContent =
+                    `Loaded: ${file.name}`;
+            };
+            reader.readAsText(file);
+        }
 
         async function runObfuscation() {
-            const obfuscateBtn = document.getElementById('obfuscate-btn');
-            const errorContainer = document.getElementById('error-container');
+            const obfuscateBtn = document.getElementById("obfuscate-btn");
+            const errorContainer = document.getElementById("error-container");
             obfuscateBtn.disabled = true;
             obfuscateBtn.innerHTML = '<div class="loader"></div>';
-            errorContainer.style.display = 'none';
-            document.getElementById('results-area').style.display = 'none';
+            errorContainer.style.display = "none";
+            document.getElementById("results-area").style.display = "none";
 
-            const sourceCode = document.querySelector('.tab-button.active[onclick*="text-input"]') ? editor.getValue() : uploadedFileContent;
+            const sourceCode = document.querySelector(
+                '.tab-button.active[onclick*="text-input"]',
+            )
+                ? editor.getValue()
+                : uploadedFileContent;
             if (!sourceCode.trim()) {
-                errorContainer.textContent = "Please provide some C/C++ code to obfuscate.";
-                errorContainer.style.display = 'block';
+                errorContainer.textContent =
+                    "Please provide some C/C++ code to obfuscate.";
+                errorContainer.style.display = "block";
                 obfuscateBtn.disabled = false;
-                obfuscateBtn.innerHTML = 'Obfuscate Code';
+                obfuscateBtn.innerHTML = "Obfuscate Code";
                 return;
             }
 
-            const payload = { code: sourceCode };
+            const enableCFF = document.getElementById("cff-checkbox").checked;
+            const payload = {
+                code: sourceCode,
+                options: {
+                    enableCFF: enableCFF,
+                },
+            };
 
             try {
                 const response = await fetch(`${backendUrl}/obfuscate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(payload),
                 });
                 const result = await response.json();
                 if (!response.ok) {
                     throw new Error(result.details || result.error);
                 }
 
-                displayReport(result.report);
+                displayReport(result.report, result.cffMetrics);
                 setupDownloadButtons(backendUrl, result.downloadPath);
-                document.getElementById('results-area').style.display = 'block';
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                document.getElementById("results-area").style.display = "block";
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: "smooth",
+                });
             } catch (error) {
-                console.error('Obfuscation failed:', error);
+                console.error("Obfuscation failed:", error);
                 errorContainer.textContent = `An error occurred:\n\n${error.message}\n\n(The free server might be waking up from sleep. Please try again in 30 seconds.)`;
-                errorContainer.style.display = 'block';
+                errorContainer.style.display = "block";
             } finally {
                 obfuscateBtn.disabled = false;
-                obfuscateBtn.innerHTML = 'Obfuscate Code';
+                obfuscateBtn.innerHTML = "Obfuscate Code";
             }
         }
 
-        function displayReport(report) {
-            const container = document.getElementById('report-container-wrapper');
-            let html = '<h3>Obfuscation Report</h3>';
+        function displayReport(report, cffMetrics) {
+            const container = document.getElementById("report-container-wrapper");
+            let html = "<h3>Obfuscation Report</h3>";
+
             const categories = {
-                "Input Parameters": { "Input File": report.inputFile, "Target Platform": report.inputParameters.targetPlatform },
-                "Output Attributes": { "Original Size": report.outputAttributes.originalIRStringDataSize, "Obfuscated Size": report.outputAttributes.obfuscatedIRStringDataSize, "Size Change": report.outputAttributes.stringDataSizeChange },
-                "Obfuscation Metrics": { "Cycles Completed": report.obfuscationMetrics.cyclesCompleted, "Strings Encrypted": report.obfuscationMetrics.stringEncryption.count, "Encryption Method": report.obfuscationMetrics.stringEncryption.method }
+                "Input Parameters": {
+                    "Input File": report.inputFile,
+                    "Target Platform": report.inputParameters.targetPlatform,
+                    "String Encryption": report.inputParameters.enableStringEncryption,
+                    "Control Flow Flattening":
+                        report.inputParameters.enableControlFlowFlattening,
+                },
+                "String Encryption": {
+                    "Strings Encrypted":
+                        report.obfuscationMetrics.stringEncryption.count,
+                    "Encryption Method":
+                        report.obfuscationMetrics.stringEncryption.method,
+                    "Size Change": report.outputAttributes.stringDataSizeChange,
+                },
             };
+
+            if (cffMetrics) {
+                categories["Control Flow Flattening"] = {
+                    "Functions Flattened": cffMetrics.flattenedFunctions,
+                    "Blocks Flattened": cffMetrics.flattenedBlocks,
+                    "Functions Skipped": cffMetrics.skippedFunctions,
+                };
+            }
+
             for (const category in categories) {
                 html += `<table class="report-table"><tr><th colspan="2">${category}</th></tr>`;
                 for (const key in categories[category]) {
                     html += `<tr><td>${key}</td><td>${categories[category][key]}</td></tr>`;
                 }
-                html += '</table><br>';
+                html += "</table><br>";
             }
             container.innerHTML = html;
         }
 
         function setupDownloadButtons(baseUrl, downloadPath) {
-            const binaryBtn = document.getElementById('download-binary-btn');
-            const pdfBtn = document.getElementById('download-pdf-btn');
+            const binaryBtn = document.getElementById("download-binary-btn");
+            const pdfBtn = document.getElementById("download-pdf-btn");
             binaryBtn.href = `${baseUrl}${downloadPath}`;
-            binaryBtn.classList.remove('disabled');
-            pdfBtn.classList.remove('disabled');
+            binaryBtn.classList.remove("disabled");
+            pdfBtn.classList.remove("disabled");
             pdfBtn.onclick = () => {
-                const reportElement = document.getElementById('report-container-wrapper');
-                html2canvas(reportElement, { scale: 2 }).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const { jsPDF } = window.jspdf;
-                    const pdf = new jsPDF({ orientation: 'p', unit: 'px', format: [canvas.width, canvas.height] });
-                    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-                    pdf.save('chakravyuha-obfuscation-report.pdf');
+                const reportElement = document.getElementById(
+                    "report-container-wrapper",
+                );
+                html2canvas(reportElement, {scale: 2}).then((canvas) => {
+                    const imgData = canvas.toDataURL("image/png");
+                    const {jsPDF} = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: "p",
+                        unit: "px",
+                        format: [canvas.width, canvas.height],
+                    });
+                    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+                    pdf.save("chakravyuha-obfuscation-report.pdf");
                 });
             };
         }
