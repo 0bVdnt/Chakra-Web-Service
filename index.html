@@ -52,14 +52,25 @@
             padding: 1.5rem 2rem;
             text-align: center;
         }
-
-        .header h1 {
-            margin: 0;
-            font-size: 2rem;
+        
+        .header .logo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 0.5rem;
+            border-radius: 8px;
+            display: block;
         }
-
+        
+        .header .tagline {
+            font-style: italic;
+            font-size: 1.2rem;
+            margin-top: 0;
+            margin-bottom: 0.25rem;
+            color: #ecf0f1;
+        }
+        
         .header p {
-            margin: 0.5rem 0 0;
+            margin: 0;
             color: #bdc3c7;
         }
 
@@ -107,6 +118,21 @@
 
         .tab-content.active {
             display: block;
+        }
+        
+        .language-selector {
+            padding: 0.5rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .language-selector label {
+            font-weight: 600;
+        }
+        .language-selector select {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
         }
 
         .CodeMirror {
@@ -285,7 +311,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Chakravyuha</h1>
+            <img src="./assets/chakravyuha_logo.png" alt="Chakravyuha Logo" class="logo">
+            <p class="tagline">The Impenetrable Code Formation</p>
             <p>A Web-Based C/C++ Obfuscation Service</p>
         </div>
 
@@ -296,7 +323,16 @@
                     <button class="tab-button active" onclick="showTab('text-input')">Paste Code</button>
                     <button class="tab-button" onclick="showTab('file-input')">Upload File (.c or .cpp)</button>
                 </div>
-                <div id="text-input-content" class="tab-content active"><textarea id="code-editor"></textarea></div>
+                <div id="text-input-content" class="tab-content active">
+                    <div class="language-selector">
+                        <label for="language-select">Language:</label>
+                        <select id="language-select">
+                            <option value="cpp">C++</option>
+                            <option value="c">C</option>
+                        </select>
+                    </div>
+                    <textarea id="code-editor"></textarea>
+                </div>
                 <div id="file-input-content" class="tab-content">
                     <div id="file-upload-area" onclick="document.getElementById('file-upload').click();">
                         <p id="file-label">Click or drag & drop a .c or .cpp file here</p>
@@ -345,7 +381,7 @@
                 <div id="report-container-wrapper" class="report-container"></div>
                 <div class="download-buttons">
                     <a id="download-binary-btn" class="btn disabled" download>Download Obfuscated Binary</a>
-                    <a id="view-cfg-btn" class="btn btn-tertiary disabled" target="_blank">View CFG Comparison</a>
+                    <button id="view-cfg-btn" class="btn btn-tertiary disabled">View CFG Comparison</button>
                     <button id="download-pdf-btn" class="btn btn-secondary disabled">Save Report as PDF</button>
                 </div>
             </div>
@@ -357,7 +393,7 @@
         let uploadedFileContent = '';
         let uploadedFileName = '';
 
-        const defaultCode = `// Standard C++ headers are used for portability.
+        const cppDefaultCode = `// Standard C++ headers are used for portability.
 #include <iostream>
 #include <string>
 #include <vector>
@@ -403,10 +439,57 @@ int main() {
 
     return 0;
 }`;
+        
+        const cDefaultCode = `// Standard C headers are used for portability.
+#include <stdio.h>
+#include <string.h>
 
-        // IMPORTANT: Set this to your backend's public URL when you deploy.
-        // const backendUrl = 'http://localhost:3001'; // For local testing
-        const backendUrl = "https://chakravyuha-backend.onrender.com:3001"
+// This function contains sensitive strings that will be encrypted.
+void check_credentials(const char* user) {
+    // This string literal is a prime target for encryption.
+    const char* secret_user = "admin_user_secret";
+
+    if (strcmp(user, secret_user) == 0) {
+        // This success message will also be encrypted.
+        printf("Access Granted! Welcome, administrator.\\n");
+    } else {
+        // This failure message will also be encrypted.
+        printf("Access Denied! Incorrect username.\\n");
+    }
+}
+
+// This function has loops and conditional logic ideal for control flow flattening.
+int process_data(const int* data, int size) {
+    int result = 0;
+    for (int i = 0; i < size; ++i) {
+        int val = data[i];
+        if (val > 50) {
+            result += (val * 2);
+        } else if (val > 10) {
+            result += (val + 5);
+        } else {
+            result -= 1;
+        }
+    }
+    return result;
+}
+
+int main() {
+    printf("--- Credential Check ---\\n");
+    check_credentials("guest");
+    check_credentials("admin_user_secret");
+
+    printf("\\n--- Data Processing ---\\n");
+    int numbers[] = {5, 25, 75, -3};
+    int final_result = process_data(numbers, 4);
+    printf("Final calculation result: %d\\n", final_result);
+
+    return 0;
+}`;
+        
+        const backendUrl = "https://chakravyuha-backend.onrender.com:3001";
+        // const backendUrl = "http://localhost:3001"; // For local testing
+
         window.onload = function () {
             if (typeof CodeMirror === 'undefined') {
                 document.body.innerHTML = "<h1>Error: Could not load the code editor.</h1>";
@@ -417,12 +500,25 @@ int main() {
                 mode: "text/x-c++src",
                 theme: "material-darker"
             });
-            editor.setValue(defaultCode);
+            editor.setValue(cppDefaultCode);
+
             const fileUploadArea = document.getElementById('file-upload-area');
             const fileInput = document.getElementById('file-upload');
+            const langSelect = document.getElementById('language-select');
+
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => fileUploadArea.addEventListener(e, p => { p.preventDefault(); p.stopPropagation(); }, false));
             fileUploadArea.addEventListener('drop', handleFileDrop, false);
             fileInput.addEventListener('change', handleFileSelect, false);
+            
+            langSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'c') {
+                    editor.setOption("mode", "text/x-csrc");
+                    editor.setValue(cDefaultCode);
+                } else {
+                    editor.setOption("mode", "text/x-c++src");
+                    editor.setValue(cppDefaultCode);
+                }
+            });
         };
 
         function showTab(tabName) {
@@ -454,6 +550,11 @@ int main() {
             errorContainer.style.display = 'none';
             document.getElementById('results-area').style.display = 'none';
 
+            const cfgBtn = document.getElementById('view-cfg-btn');
+            cfgBtn.classList.add('disabled');
+            cfgBtn.onclick = null;
+
+
             const isUploadTab = document.querySelector('.tab-button.active[onclick*="file-input"]');
             const sourceCode = isUploadTab ? uploadedFileContent : editor.getValue();
             
@@ -465,9 +566,17 @@ int main() {
                 return;
             }
 
+            let effectiveFilename;
+            if (isUploadTab) {
+                effectiveFilename = uploadedFileName || 'source.cpp';
+            } else {
+                const lang = document.getElementById('language-select').value;
+                effectiveFilename = lang === 'c' ? 'source.c' : 'source.cpp';
+            }
+
             const payload = {
                 code: sourceCode,
-                filename: isUploadTab && uploadedFileName ? uploadedFileName : 'source.cpp',
+                filename: effectiveFilename,
                 pipeline: document.getElementById('pipeline-select').value,
                 level: document.getElementById('level-select').value,
                 cycles: document.getElementById('cycles-input').value,
@@ -551,6 +660,7 @@ int main() {
             const pdfBtn = document.getElementById('download-pdf-btn');
             const cfgBtn = document.getElementById('view-cfg-btn');
 
+            // Setup binary and PDF download buttons
             binaryBtn.href = `${backendUrl}${result.downloadPath}`;
             binaryBtn.classList.remove('disabled');
 
@@ -566,12 +676,16 @@ int main() {
                 });
             };
 
+            cfgBtn.classList.remove('disabled');
+
             if (result.comparisonPagePath) {
-                cfgBtn.href = `${backendUrl}${result.comparisonPagePath}`;
-                cfgBtn.classList.remove('disabled');
+                cfgBtn.onclick = () => {
+                    window.open(`${backendUrl}${result.comparisonPagePath}`, '_blank');
+                };
             } else {
-                cfgBtn.href = '#';
-                cfgBtn.classList.add('disabled');
+                cfgBtn.onclick = () => {
+                    alert("To view the CFG comparison, you must select the 'Generate CFG Visual Comparison' checkbox before running the obfuscation.");
+                };
             }
         }
     </script>

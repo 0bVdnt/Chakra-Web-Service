@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import json
 import os
 import shutil
@@ -8,7 +7,6 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 # --- Configuration ---
-# All paths are relative to the session directory, which is the CWD.
 session_dir = Path.cwd()
 build_dir = session_dir / "build"
 results_dir = build_dir
@@ -23,7 +21,6 @@ def find_executable(name, msg):
 
 # --- Parallel Rendering Task ---
 def render_dot_to_svg(dot_file_path, dot_executable):
-    """Converts a single .dot file to an .svg file."""
     is_original = dot_file_path.parent.name == "original"
     target_dir = results_dir / "visualizations" / ("original" if is_original else "obfuscated")
     svg_file = target_dir / f"{dot_file_path.stem.strip('.')}.svg"
@@ -39,7 +36,6 @@ def render_dot_to_svg(dot_file_path, dot_executable):
 
 # --- Main Logic ---
 def generate_visualizations():
-    """Finds .dot files and renders them into SVG images in parallel."""
     print("Python script: Rendering CFG images...")
     dot = find_executable("dot", "'dot' (from graphviz) not found.")
     
@@ -60,8 +56,7 @@ def generate_visualizations():
         return True
 
     with ProcessPoolExecutor() as executor:
-        dot_executables = [dot] * len(all_dots)
-        results = list(executor.map(render_dot_to_svg, all_dots, dot_executables))
+        results = list(executor.map(render_dot_to_svg, all_dots, [dot] * len(all_dots)))
 
     if not all(results):
         print("Error: Some images failed to render.", file=sys.stderr)
@@ -71,7 +66,6 @@ def generate_visualizations():
     return True
 
 def create_comparison_html():
-    """Generates the final interactive HTML file."""
     print("Python script: Generating interactive HTML report...")
     comparison_dir = results_dir / "visualizations" / "comparison"
     comparison_dir.mkdir(parents=True, exist_ok=True)
@@ -93,13 +87,6 @@ def create_comparison_html():
                     "obfuscated": str(obf_img.relative_to(results_dir)),
                 }
 
-    # =========================================================================
-    # THE FINAL FIX IS HERE:
-    # By using double curly braces `{{` and `}}`, we tell Python's f-string
-    # engine to output literal `{` and `}` characters. This ensures the
-    # JavaScript template literal `${{func}}` is written correctly into the
-    # HTML file, which the browser can then execute properly.
-    # =========================================================================
     html_template = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -107,26 +94,117 @@ def create_comparison_html():
         <meta charset="UTF-8">
         <title>Chakravyuha - Visual Comparison Report</title>
         <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2c3e50; padding: 20px; }}
-            .container {{ max-width: 1600px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden; }}
-            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }}
-            .header h1 {{ font-size: 2.5em; margin: 0; }}
-            .controls {{ padding: 20px; background: #f8f9fa; border-bottom: 2px solid #e9ecef; display: flex; gap: 20px; align-items: center; }}
-            .controls select {{ padding: 12px; border-radius: 8px; border: 2px solid #dee2e6; font-size: 16px; min-width: 250px; }}
-            .comparison-container {{ padding: 40px; }}
-            .image-container {{ display: flex; gap: 30px; justify-content: center; align-items: flex-start; }}
-            .image-wrapper {{ flex: 1; text-align: center; max-width: 50%; }}
-            .image-wrapper h3 {{ margin-bottom: 20px; font-size: 1.5em; padding: 10px; background: #e9ecef; border-radius: 8px; }}
-            .image-wrapper img {{ max-width: 100%; height: auto; border: 3px solid #dee2e6; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }}
-            .no-data {{ text-align: center; padding: 80px 40px; color: #6c757d; font-size: 1.4em; }}
+            :root {{
+                --bg-color: #f8f9fa;
+                --container-bg: #ffffff;
+                --header-bg: #2c3e50;
+                --text-color: #343a40;
+                --border-color: #dee2e6;
+            }}
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: var(--bg-color);
+                color: var(--text-color);
+                margin: 0;
+                padding: 2rem;
+            }}
+            .container {{
+                max-width: 1600px;
+                margin: 0 auto;
+                background: var(--container-bg);
+                border-radius: 8px;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+                overflow: hidden;
+            }}
+            .header {{
+                background: var(--header-bg);
+                color: white;
+                padding: 1.5rem 2rem;
+                text-align: center;
+            }}
+            .header .logo {{
+                width: 120px;
+                height: 120px;
+                margin: 0 auto 1rem;
+                display: block;
+                border-radius: 8px;
+            }}
+            .header h2 {{
+                font-size: 2em;
+                margin: 0;
+                font-weight: 600;
+            }}
+            .controls {{
+                padding: 20px;
+                background: #fdfdff;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                gap: 20px;
+                align-items: center;
+                justify-content: center;
+            }}
+            .controls label {{
+                font-weight: 600;
+                font-size: 1.1rem;
+            }}
+            .controls select {{
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+                font-size: 1rem;
+                min-width: 300px;
+            }}
+            .comparison-container {{ padding: 2.5rem; }}
+            .image-container {{
+                display: flex;
+                gap: 2rem;
+                justify-content: center;
+                align-items: flex-start;
+            }}
+            .image-wrapper {{
+                flex: 1;
+                text-align: center;
+                max-width: 50%;
+                background: #fdfdff;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 1.5rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }}
+            .image-wrapper h3 {{
+                margin-top: 0;
+                margin-bottom: 1.5rem;
+                font-size: 1.5em;
+                padding-bottom: 0.75rem;
+                border-bottom: 1px solid var(--border-color);
+            }}
+            .image-wrapper img {{
+                max-width: 100%;
+                height: auto;
+                border-radius: 4px;
+            }}
+            .no-data {{
+                text-align: center;
+                padding: 80px 40px;
+                color: #6c757d;
+                font-size: 1.4em;
+            }}
         </style>
     </head>
     <body>
         <div class="container">
-            <div class="header"><h1>Visual Comparison of Control Flow Graphs</h1></div>
-            <div class="controls"><select id="functionSelect"></select></div>
+            <div class="header">
+                <img src="/assets/chakravyuha_logo.png" alt="Chakravyuha Logo" class="logo">
+                <h2>Visual Comparison of Control Flow Graphs</h2>
+            </div>
+            <div class="controls">
+                <label for="functionSelect">Select Function:</label>
+                <select id="functionSelect"></select>
+            </div>
             <div class="comparison-container">
-                <div id="imageContainer" class="image-container"><div class="no-data">Select a function to view comparison</div></div>
+                <div id="imageContainer" class="image-container">
+                    <div class="no-data">Select a function to view comparison.</div>
+                </div>
             </div>
         </div>
         <script>
@@ -140,7 +218,7 @@ def create_comparison_html():
                 if (functions.length > 0) {{
                     funcSelect.innerHTML = functions.map(func => `<option value="${{func}}">${{func}}</option>`).join('');
                 }} else {{
-                    funcSelect.innerHTML = '<option>No functions found</option>';
+                    funcSelect.innerHTML = '<option>No functions found to compare</option>';
                 }}
                 updateDisplay();
             }}
@@ -172,7 +250,7 @@ def create_comparison_html():
     html_file = comparison_dir / "index.html"
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(html_template)
-    print(f"Python script: Created comparison viewer at {html_file}")
+    print(f"Python script: Created themed comparison viewer at {html_file}")
     return True
 
 def main():

@@ -10,15 +10,25 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const TEMP_DIR = path.join(__dirname, 'temp_sessions');
 
+// Create a temporary directory for session files on startup
 if (fs.existsSync(TEMP_DIR)) rimraf.sync(TEMP_DIR);
 fs.mkdirSync(TEMP_DIR);
 
+// --- Middleware Setup ---
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+
+// --- Static File Serving ---
+// This line serves your logo from the '/assets' folder
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+// This line serves the dynamically generated comparison pages
 app.use('/comparison', express.static(TEMP_DIR));
 
+
+// --- Routes ---
 app.get('/', (req, res) => res.status(200).json({ status: 'ok', message: 'Chakravyuha backend is running.' }));
 
+// Helper function to format file sizes for the report
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -28,13 +38,19 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
+// Main obfuscation endpoint
 app.post('/obfuscate', (req, res) => {
     const { code, pipeline, cycles = 1, level = 'medium', generateCfg = false, filename = 'source.cpp' } = req.body;
-    if (!code) return res.status(400).json({ error: 'Missing code parameter.' });
+    if (!code) {
+        return res.status(400).json({ error: 'Missing code parameter.' });
+    }
     
     const cycleCount = parseInt(cycles, 10);
-    if (isNaN(cycleCount) || cycleCount < 1 || cycleCount > 5) return res.status(400).json({ error: 'Cycles must be between 1 and 5.' });
+    if (isNaN(cycleCount) || cycleCount < 1 || cycleCount > 5) {
+        return res.status(400).json({ error: 'Cycles must be between 1 and 5.' });
+    }
 
+    // Create a unique session directory for this request
     const sessionId = crypto.randomBytes(16).toString('hex');
     const sessionDir = path.join(TEMP_DIR, sessionId);
     fs.mkdirSync(sessionDir, { recursive: true });
@@ -45,6 +61,7 @@ app.post('/obfuscate', (req, res) => {
     const buildDir = path.join(sessionDir, 'build');
     fs.mkdirSync(buildDir);
 
+    // Prepare and execute the main obfuscation shell script
     const scriptPath = path.join(__dirname, 'scripts', 'run_obfuscation.sh');
     const args = [scriptPath, sourceFilePath, buildDir, pipeline, cycleCount.toString(), generateCfg.toString(), filename];
 
@@ -58,9 +75,11 @@ app.post('/obfuscate', (req, res) => {
         }
         console.log(`[Job ${sessionId}] Obfuscation script finished.`);
 
+        // Function to parse report files and send the final response
         const processAndRespond = () => {
             const reportPath = path.join(buildDir, 'report.json');
             const sizeMetricsPath = path.join(buildDir, 'size_metrics.json');
+
             if (!fs.existsSync(reportPath)) {
                 rimraf.sync(sessionDir);
                 return res.status(500).json({ error: 'Report.json was not generated.', details: `--- SCRIPT OUTPUT ---\n${fullOutput}` });
@@ -70,7 +89,7 @@ app.post('/obfuscate', (req, res) => {
                 reportJson.inputParameters.obfuscationLevel = level;
                 reportJson.obfuscationMetrics.cyclesCompleted = cycleCount;
 
-                // Add binary size metrics to the report
+                // If binary size metrics exist, add them to the report
                 if (fs.existsSync(sizeMetricsPath)) {
                     const sizeMetrics = JSON.parse(fs.readFileSync(sizeMetricsPath, 'utf8'));
                     const origSize = sizeMetrics.originalSize;
@@ -92,6 +111,7 @@ app.post('/obfuscate', (req, res) => {
                     downloadPath: `/download/${sessionId}/obfuscated_program`
                 };
 
+                // If CFG was generated, add the path to the comparison page
                 if (generateCfg) {
                     const comparisonPage = path.join('build', 'visualizations', 'comparison', 'index.html');
                     responsePayload.comparisonPagePath = `/comparison/${sessionId}/${comparisonPage}`;
@@ -104,6 +124,7 @@ app.post('/obfuscate', (req, res) => {
             }
         };
 
+        // If CFG generation was requested, run the Python visualization script first
         if (generateCfg) {
             console.log(`[Job ${sessionId}] Generating CFG visualizations...`);
             const vizScriptPath = path.join(__dirname, 'scripts', 'create_comparison.py');
@@ -122,10 +143,27 @@ app.post('/obfuscate', (req, res) => {
     });
 });
 
+// Download endpoint for the obfuscated binary
 app.get('/download/:sessionId/:binaryName', (req, res) => {
-    // This logic remains unchanged.
+    const { sessionId, binaryName } = req.params;
+    const filePath = path.join(TEMP_DIR, sessionId, 'build', binaryName);
+
+    if (fs.existsSync(filePath)) {
+        res.download(filePath, (err) => {
+            if (err) {
+                console.error(`[Download Error] For session ${sessionId}:`, err);
+            }
+            // Clean up the session directory after a successful download
+            rimraf(path.join(TEMP_DIR, sessionId), (rimrafErr) => {
+                if (rimrafErr) console.error(`Failed to clean up session ${sessionId}:`, rimrafErr);
+            });
+        });
+    } else {
+        res.status(404).json({ error: 'File not found. It may have been downloaded already or expired.' });
+    }
 });
 
+// --- Start Server ---
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Chakravyuha backend server running on port ${PORT}`);
 });
