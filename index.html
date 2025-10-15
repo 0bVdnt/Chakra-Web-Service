@@ -112,7 +112,7 @@
         .CodeMirror {
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            height: 250px;
+            height: 300px;
         }
 
         #file-upload-area {
@@ -130,7 +130,7 @@
 
         .config-grid {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
         }
 
@@ -140,40 +140,30 @@
             margin-bottom: 0.5rem;
         }
 
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+        select.form-control,
+        input.form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
         }
 
         .checkbox-item {
             display: flex;
             align-items: center;
+            margin-top: 1rem;
         }
 
         .checkbox-item input {
             margin-right: 0.75rem;
-        }
-
-        .checkbox-item .status-tag {
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 0.2rem 0.6rem;
-            border-radius: 12px;
-            margin-left: auto;
-            color: white;
-        }
-
-        .status-tag.enabled {
-            background-color: #27ae60;
-        }
-
-        .status-tag.soon {
-            background-color: #f39c12;
+            width: 18px;
+            height: 18px;
         }
 
         .btn {
-            display: flex;
+            display: inline-flex;
             justify-content: center;
             align-items: center;
             width: 100%;
@@ -186,12 +176,11 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s;
-            text-align: center;
             text-decoration: none;
             box-sizing: border-box;
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             background-color: var(--primary-hover);
         }
 
@@ -235,16 +224,30 @@
 
         .download-buttons {
             display: flex;
+            flex-wrap: wrap;
             gap: 1rem;
             margin-top: 1.5rem;
+        }
+
+        .download-buttons .btn {
+            width: auto;
+            flex-grow: 1;
         }
 
         .btn-secondary {
             background-color: #27ae60;
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover:not(:disabled) {
             background-color: #229954;
+        }
+
+        .btn-tertiary {
+            background-color: #8e44ad;
+        }
+
+        .btn-tertiary:hover:not(:disabled) {
+            background-color: #7d3c98;
         }
 
         #error-container {
@@ -287,61 +290,62 @@
         </div>
 
         <div class="main-content">
-            <!-- Step 1: Input Code -->
             <div class="section">
                 <h2 class="section-title">Step 1: Provide Your Code</h2>
                 <div class="tabs">
                     <button class="tab-button active" onclick="showTab('text-input')">Paste Code</button>
-                    <button class="tab-button" onclick="showTab('file-input')">Upload File</button>
+                    <button class="tab-button" onclick="showTab('file-input')">Upload File (.c or .cpp)</button>
                 </div>
-                <div id="text-input-content" class="tab-content active">
-                    <textarea id="code-editor"></textarea>
-                </div>
+                <div id="text-input-content" class="tab-content active"><textarea id="code-editor"></textarea></div>
                 <div id="file-input-content" class="tab-content">
                     <div id="file-upload-area" onclick="document.getElementById('file-upload').click();">
                         <p id="file-label">Click or drag & drop a .c or .cpp file here</p>
                     </div>
-                    <input type="file" id="file-upload" accept=".c,.cpp">
+                    <input type="file" id="file-upload" accept=".c,.cpp,.cxx,.cc">
                 </div>
             </div>
 
-            <!-- Step 2: Configure Obfuscation (Simplified) -->
             <div class="section">
-                <h2 class="section-title">Step 2: Obfuscation Features</h2>
+                <h2 class="section-title">Step 2: Configure Obfuscation</h2>
                 <div class="config-grid">
                     <div class="form-group">
-                        <label>Target Platform: Linux (via Docker)</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" checked disabled> String Encryption
-                                <span class="status-tag enabled">ENABLED</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" disabled> Control Flow Flattening
-                                <span class="status-tag soon">COMING SOON</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" disabled> Bogus Code Insertion
-                                <span class="status-tag soon">COMING SOON</span>
-                            </label>
-                        </div>
+                        <label for="pipeline-select">Obfuscation Pipeline</label>
+                        <select id="pipeline-select" class="form-control">
+                            <option value="full">Full Obfuscation (All Passes)</option>
+                            <option value="cff">Control Flow Flattening Only (Beta)</option>
+                            <option value="string">String Encryption Only</option>
+                            <option value="fake">Fake Code Insertion Only</option>
+                        </select>
                     </div>
+                    <div class="form-group">
+                        <label for="level-select">Obfuscation Level</label>
+                        <select id="level-select" class="form-control">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cycles-input">Obfuscation Cycles (1-5)</label>
+                        <input type="number" id="cycles-input" class="form-control" value="1" min="1" max="5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="generate-cfg-checkbox"> Generate CFG Visual Comparison
+                    </label>
                 </div>
             </div>
 
             <div id="error-container"></div>
+            <div class="section"><button class="btn" id="obfuscate-btn" onclick="runObfuscation()">Obfuscate Code</button></div>
 
-            <!-- Step 3: Run -->
-            <div class="section">
-                <button class="btn" id="obfuscate-btn" onclick="runObfuscation()">Obfuscate Code</button>
-            </div>
-
-            <!-- Step 4: Results -->
             <div id="results-area" class="section">
                 <h2 class="section-title">Step 3: Review Results</h2>
                 <div id="report-container-wrapper" class="report-container"></div>
                 <div class="download-buttons">
-                    <a id="download-binary-btn" class="btn disabled">Download Obfuscated Binary</a>
+                    <a id="download-binary-btn" class="btn disabled" download>Download Obfuscated Binary</a>
+                    <a id="view-cfg-btn" class="btn btn-tertiary disabled" target="_blank">View CFG Comparison</a>
                     <button id="download-pdf-btn" class="btn btn-secondary disabled">Save Report as PDF</button>
                 </div>
             </div>
@@ -351,17 +355,68 @@
     <script>
         let editor;
         let uploadedFileContent = '';
-        const defaultCode = `#include <stdio.h>\n\n// A simple function that contains a critical data string.\nvoid returnPassword() {\n    printf("SUPER_SECRET_STRING");\n}\n\nint main() {\n    returnPassword();\n    return 0;\n}`;
+        let uploadedFileName = '';
 
-        // IMPORTANT: Replace this with your actual Render.com backend URL
-        const backendUrl = 'https://chakravyuha-backend.onrender.com';
+        const defaultCode = `// Standard C++ headers are used for portability.
+#include <iostream>
+#include <string>
+#include <vector>
+
+// This function contains sensitive strings that will be encrypted.
+void check_credentials(const std::string& user) {
+    // This string literal is a prime target for encryption.
+    std::string secret_user = "admin_user_secret";
+
+    if (user == secret_user) {
+        // This success message will also be encrypted.
+        std::cout << "Access Granted! Welcome, administrator." << std::endl;
+    } else {
+        // This failure message will also be encrypted.
+        std::cout << "Access Denied! Incorrect username." << std::endl;
+    }
+}
+
+// This function has loops and conditional logic ideal for control flow flattening.
+int process_data(const std::vector<int>& data) {
+    int result = 0;
+    for (int val : data) {
+        if (val > 50) {
+            result += (val * 2);
+        } else if (val > 10) {
+            result += (val + 5);
+        } else {
+            result -= 1;
+        }
+    }
+    return result;
+}
+
+int main() {
+    std::cout << "--- Credential Check ---" << std::endl;
+    check_credentials("guest");
+    check_credentials("admin_user_secret");
+
+    std::cout << "\\n--- Data Processing ---" << std::endl;
+    std::vector<int> numbers = {5, 25, 75, -3};
+    int final_result = process_data(numbers);
+    std::cout << "Final calculation result: " << final_result << std::endl;
+
+    return 0;
+}`;
+
+        // IMPORTANT: Set this to your backend's public URL when you deploy.
+        const backendUrl = 'http://localhost:3001'; // For local testing
 
         window.onload = function () {
             if (typeof CodeMirror === 'undefined') {
-                document.body.innerHTML = "<h1>Error: Could not load the code editor. Please check your internet connection and ad-blockers.</h1>";
+                document.body.innerHTML = "<h1>Error: Could not load the code editor.</h1>";
                 return;
             }
-            editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), { lineNumbers: true, mode: "text/x-c++src", theme: "material-darker" });
+            editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+                lineNumbers: true,
+                mode: "text/x-c++src",
+                theme: "material-darker"
+            });
             editor.setValue(defaultCode);
             const fileUploadArea = document.getElementById('file-upload-area');
             const fileInput = document.getElementById('file-upload');
@@ -370,10 +425,26 @@
             fileInput.addEventListener('change', handleFileSelect, false);
         };
 
-        function showTab(tabName) { document.querySelectorAll('.tab-content, .tab-button').forEach(el => el.classList.remove('active')); document.getElementById(`${tabName}-content`).classList.add('active'); document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active'); }
-        function handleFileDrop(event) { if (event.dataTransfer.files.length > 0) readFile(event.dataTransfer.files[0]); }
-        function handleFileSelect(event) { if (event.target.files.length > 0) readFile(event.target.files[0]); }
-        function readFile(file) { const reader = new FileReader(); reader.onload = (e) => { uploadedFileContent = e.target.result; document.getElementById('file-label').textContent = `Loaded: ${file.name}`; }; reader.readAsText(file); }
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content, .tab-button').forEach(el => el.classList.remove('active'));
+            document.getElementById(`${tabName}-content`).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+        function handleFileDrop(event) {
+            if (event.dataTransfer.files.length > 0) readFile(event.dataTransfer.files[0]);
+        }
+        function handleFileSelect(event) {
+            if (event.target.files.length > 0) readFile(event.target.files[0]);
+        }
+        function readFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedFileContent = e.target.result;
+                uploadedFileName = file.name;
+                document.getElementById('file-label').textContent = `Loaded: ${file.name}`;
+            };
+            reader.readAsText(file);
+        }
 
         async function runObfuscation() {
             const obfuscateBtn = document.getElementById('obfuscate-btn');
@@ -383,7 +454,9 @@
             errorContainer.style.display = 'none';
             document.getElementById('results-area').style.display = 'none';
 
-            const sourceCode = document.querySelector('.tab-button.active[onclick*="text-input"]') ? editor.getValue() : uploadedFileContent;
+            const isUploadTab = document.querySelector('.tab-button.active[onclick*="file-input"]');
+            const sourceCode = isUploadTab ? uploadedFileContent : editor.getValue();
+            
             if (!sourceCode.trim()) {
                 errorContainer.textContent = "Please provide some C/C++ code to obfuscate.";
                 errorContainer.style.display = 'block';
@@ -392,7 +465,14 @@
                 return;
             }
 
-            const payload = { code: sourceCode };
+            const payload = {
+                code: sourceCode,
+                filename: isUploadTab && uploadedFileName ? uploadedFileName : 'source.cpp',
+                pipeline: document.getElementById('pipeline-select').value,
+                level: document.getElementById('level-select').value,
+                cycles: document.getElementById('cycles-input').value,
+                generateCfg: document.getElementById('generate-cfg-checkbox').checked
+            };
 
             try {
                 const response = await fetch(`${backendUrl}/obfuscate`, {
@@ -401,17 +481,15 @@
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                if (!response.ok) {
-                    throw new Error(result.details || result.error);
-                }
+                if (!response.ok) throw new Error(result.details || result.error);
 
                 displayReport(result.report);
-                setupDownloadButtons(backendUrl, result.downloadPath);
+                setupDownloadButtons(result);
                 document.getElementById('results-area').style.display = 'block';
                 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             } catch (error) {
                 console.error('Obfuscation failed:', error);
-                errorContainer.textContent = `An error occurred:\n\n${error.message}\n\n(The free server might be waking up from sleep. Please try again in 30 seconds.)`;
+                errorContainer.textContent = `An error occurred:\n\n${error.message}\n\n(The free server might be starting up. Please try again in 30 seconds.)`;
                 errorContainer.style.display = 'block';
             } finally {
                 obfuscateBtn.disabled = false;
@@ -421,27 +499,61 @@
 
         function displayReport(report) {
             const container = document.getElementById('report-container-wrapper');
-            let html = '<h3>Obfuscation Report</h3>';
-            const categories = {
-                "Input Parameters": { "Input File": report.inputFile, "Target Platform": report.inputParameters.targetPlatform },
-                "Output Attributes": { "Original Size": report.outputAttributes.originalIRStringDataSize, "Obfuscated Size": report.outputAttributes.obfuscatedIRStringDataSize, "Size Change": report.outputAttributes.stringDataSizeChange },
-                "Obfuscation Metrics": { "Cycles Completed": report.obfuscationMetrics.cyclesCompleted, "Strings Encrypted": report.obfuscationMetrics.stringEncryption.count, "Encryption Method": report.obfuscationMetrics.stringEncryption.method }
-            };
-            for (const category in categories) {
-                html += `<table class="report-table"><tr><th colspan="2">${category}</th></tr>`;
-                for (const key in categories[category]) {
-                    html += `<tr><td>${key}</td><td>${categories[category][key]}</td></tr>`;
-                }
-                html += '</table><br>';
+            const { inputParameters, outputAttributes, obfuscationMetrics, binaryMetrics } = report;
+            const cff = obfuscationMetrics.controlFlowFlattening;
+            const str = obfuscationMetrics.stringEncryption;
+            const fci = obfuscationMetrics.fakeCodeInsertion;
+
+            let html = `
+                <table class="report-table">
+                    <tr><th colspan="2">Run Details</th></tr>
+                    <tr><td>Timestamp (UTC)</td><td>${report.timestamp}</td></tr>
+                    <tr><td>Passes Run</td><td>${obfuscationMetrics.passesRun.join(', ')}</td></tr>
+                    <tr><td>Obfuscation Level</td><td>${inputParameters.obfuscationLevel}</td></tr>
+                    <tr><td>Cycles Completed</td><td>${obfuscationMetrics.cyclesCompleted}</td></tr>
+                </table>
+                <br>
+                <table class="report-table">
+                    <tr><th colspan="2">LLVM IR Size Metrics</th></tr>
+                    <tr><td>Original IR Size</td><td>${outputAttributes.originalIRSize}</td></tr>
+                    <tr><td>Obfuscated IR Size</td><td>${outputAttributes.obfuscatedIRSize}</td></tr>
+                    <tr><td>Total IR Size Change</td><td>${outputAttributes.totalIRSizeChange}</td></tr>
+                </table>
+                <br>`;
+
+            if (binaryMetrics) {
+                html += `
+                <table class="report-table">
+                    <tr><th colspan="2">Executable Size Metrics</th></tr>
+                    <tr><td>Original Executable Size</td><td>${binaryMetrics.originalSize}</td></tr>
+                    <tr><td>Obfuscated Executable Size</td><td>${binaryMetrics.obfuscatedSize}</td></tr>
+                    <tr><td>Executable Size Change</td><td>${binaryMetrics.sizeChange}</td></tr>
+                </table>
+                <br>`;
             }
+
+            html += `
+                <table class="report-table">
+                    <tr><th colspan="2">Obfuscation Results</th></tr>
+                    <tr><td>Strings Encrypted</td><td>${str.count}</td></tr>
+                    <tr><td>String Encryption Method</td><td>${str.method || 'N/A'}</td></tr>
+                    <tr><td>Flattened Functions</td><td>${cff.flattenedFunctions}</td></tr>
+                    <tr><td>Flattened Blocks</td><td>${cff.flattenedBlocks}</td></tr>
+                    <tr><td>Skipped Functions (for CFF)</td><td>${cff.skippedFunctions}</td></tr>
+                    <tr><td>Fake Code Blocks Inserted</td><td>${fci.insertedBlocks}</td></tr>
+                </table>
+            `;
             container.innerHTML = html;
         }
 
-        function setupDownloadButtons(baseUrl, downloadPath) {
+        function setupDownloadButtons(result) {
             const binaryBtn = document.getElementById('download-binary-btn');
             const pdfBtn = document.getElementById('download-pdf-btn');
-            binaryBtn.href = `${baseUrl}${downloadPath}`;
+            const cfgBtn = document.getElementById('view-cfg-btn');
+
+            binaryBtn.href = `${backendUrl}${result.downloadPath}`;
             binaryBtn.classList.remove('disabled');
+
             pdfBtn.classList.remove('disabled');
             pdfBtn.onclick = () => {
                 const reportElement = document.getElementById('report-container-wrapper');
@@ -453,6 +565,14 @@
                     pdf.save('chakravyuha-obfuscation-report.pdf');
                 });
             };
+
+            if (result.comparisonPagePath) {
+                cfgBtn.href = `${backendUrl}${result.comparisonPagePath}`;
+                cfgBtn.classList.remove('disabled');
+            } else {
+                cfgBtn.href = '#';
+                cfgBtn.classList.add('disabled');
+            }
         }
     </script>
 </body>
