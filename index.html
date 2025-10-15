@@ -260,6 +260,18 @@
             flex-grow: 1;
         }
 
+        .download-note {
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin: 0.5rem 0 0 0;
+            padding: 0.75rem;
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+
         .btn-secondary {
             background-color: #27ae60;
         }
@@ -383,6 +395,9 @@
                     <a id="download-binary-btn" class="btn disabled" download>Download Obfuscated Binary</a>
                     <button id="view-cfg-btn" class="btn btn-tertiary disabled">View CFG Comparison</button>
                     <button id="download-pdf-btn" class="btn btn-secondary disabled">Save Report as PDF</button>
+                    <p class="download-note">
+                        <strong>Note:</strong> The downloaded binary is compiled for a Linux (x86-64) environment and will not run on Windows or macOS.
+                    </p>
                 </div>
             </div>
         </div>
@@ -393,103 +408,163 @@
         let uploadedFileContent = '';
         let uploadedFileName = '';
 
-        const cppDefaultCode = `// Standard C++ headers are used for portability.
-#include <iostream>
+        const cppDefaultCode = `#include <iostream>
 #include <string>
 #include <vector>
 
-// This function contains sensitive strings that will be encrypted.
-void check_credentials(const std::string& user) {
-    // This string literal is a prime target for encryption.
-    std::string secret_user = "admin_user_secret";
+// Simulates a character in a game
+class Character {
+public:
+    std::string name;
+    int strength;
+    int defense;
 
-    if (user == secret_user) {
-        // This success message will also be encrypted.
-        std::cout << "Access Granted! Welcome, administrator." << std::endl;
-    } else {
-        // This failure message will also be encrypted.
-        std::cout << "Access Denied! Incorrect username." << std::endl;
-    }
-}
+    Character(const std::string& n, int str, int def) : name(n), strength(str), defense(def) {}
 
-// This function has loops and conditional logic ideal for control flow flattening.
-int process_data(const std::vector<int>& data) {
-    int result = 0;
-    for (int val : data) {
-        if (val > 50) {
-            result += (val * 2);
-        } else if (val > 10) {
-            result += (val + 5);
+    /**
+     * @brief Calculates attack damage based on complex rules.
+     *
+     * This method is a prime candidate for Control Flow Flattening. Its nested
+     * if/else structure, which determines the outcome of an attack, can be
+     * completely obscured to prevent cheating.
+     */
+    void performAttack(Character& target) {
+        // --- Target for String Encryption ---
+        std::cout << "--- " << this->name << " attacks " << target.name << "! ---" << std::endl;
+
+        int luck_factor = (this->strength * 3) % 10;
+        int damage = 0;
+
+        // --- Target for Control Flow Flattening ---
+        // This complex conditional logic is what a reverse engineer would
+        // try to understand to cheat. Flattening makes it nearly impossible.
+        if (this->strength > 100) {
+            // This is the hidden "super move" branch
+            std::cout << "Unleashes a devastating SUPER ATTACK!" << std::endl;
+            damage = 999;
+        } else if (luck_factor > 7) {
+            std::cout << "A critical hit!" << std::endl;
+            damage = this->strength * 2;
+        } else if (luck_factor > 3) {
+            std::cout << "A solid strike." << std::endl;
+            damage = this->strength + luck_factor;
         } else {
-            result -= 1;
+            std::cout << "A glancing blow..." << std::endl;
+            damage = this->strength / 2;
+        }
+
+        int final_damage = damage - target.defense;
+        if (final_damage < 0) final_damage = 0;
+
+        std::cout << target.name << " takes " << final_damage << " damage." << std::endl;
+    }
+};
+
+int main(int argc, char *argv[]) {
+    Character hero("Sir Kael", 25, 10);
+    Character dragon("Ignis the Mighty", 15, 20);
+
+    // --- Target for String Encryption & Control Flow Flattening ---
+    // This logic checks for a secret command-line argument to activate a cheat.
+    // An attacker would have to reverse-engineer the obfuscated code to find the
+    // secret string "DragonSlayerMode".
+    if (argc > 1) {
+        // This is the secret command. It will be encrypted.
+        std::string secret_command = "DragonSlayerMode";
+        if (argv[1] == secret_command) {
+            // This message will also be encrypted.
+            std::cout << "SECRET MODE ACTIVATED: Hero feels immense power!" << std::endl;
+            hero.strength = 150; // Grant a massive strength boost
         }
     }
-    return result;
-}
 
-int main() {
-    std::cout << "--- Credential Check ---" << std::endl;
-    check_credentials("guest");
-    check_credentials("admin_user_secret");
+    std::cout << "A battle begins between a hero and a dragon!\\n\\n";
 
-    std::cout << "\\n--- Data Processing ---" << std::endl;
-    std::vector<int> numbers = {5, 25, 75, -3};
-    int final_result = process_data(numbers);
-    std::cout << "Final calculation result: " << final_result << std::endl;
+    // The hero attacks. The outcome depends on whether the cheat was activated.
+    hero.performAttack(dragon);
 
     return 0;
 }`;
         
-        const cDefaultCode = `// Standard C headers are used for portability.
-#include <stdio.h>
+        const cDefaultCode = `#include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
-// This function contains sensitive strings that will be encrypted.
-void check_credentials(const char* user) {
-    // This string literal is a prime target for encryption.
-    const char* secret_user = "admin_user_secret";
+/**
+ * @brief Validates a license key using a convoluted algorithm.
+ *
+ * This function is an ideal target for Control Flow Flattening because
+ * its logic is based on a loop with multiple conditional branches (if/else if/else).
+ * An attacker must now understand this obfuscated logic to generate a valid key.
+ *
+ * It also contains sensitive strings that are perfect targets for String Encryption.
+ */
+bool validate_license(const char* key) {
+    // --- Target for String Encryption ---
+    // This secret is used in the algorithm but won't be visible in the binary.
+    const char* secret_product_code = "CHAKRA-OBFUSCATOR-V1";
+    int key_length = strlen(key);
+    int secret_length = strlen(secret_product_code);
 
-    if (strcmp(user, secret_user) == 0) {
-        // This success message will also be encrypted.
-        printf("Access Granted! Welcome, administrator.\\n");
-    } else {
-        // This failure message will also be encrypted.
-        printf("Access Denied! Incorrect username.\\n");
+    if (key_length != secret_length) {
+        return false;
     }
-}
 
-// This function has loops and conditional logic ideal for control flow flattening.
-int process_data(const int* data, int size) {
-    int result = 0;
-    for (int i = 0; i < size; ++i) {
-        int val = data[i];
-        if (val > 50) {
-            result += (val * 2);
-        } else if (val > 10) {
-            result += (val + 5);
+    int accumulator = 0;
+
+    // --- Target for Control Flow Flattening ---
+    // This loop with complex conditions will be flattened into an
+    // unrecognizable state machine. An attacker cannot easily replicate this logic.
+    for (int i = 0; i < key_length; ++i) {
+        int key_char = key[i];
+        int secret_char = secret_product_code[i];
+
+        if (i % 3 == 0) {
+            accumulator += (key_char ^ secret_char);
+        } else if (i % 3 == 1) {
+            accumulator -= (key_char - secret_char);
         } else {
-            result -= 1;
+            accumulator += (key_char + secret_char) / 2;
         }
+
+        // Add a non-linear transformation to make analysis harder
+        accumulator = (accumulator * 3) & 0xFF;
     }
-    return result;
+
+    // The final check compares against a magic number. An attacker needs to
+    // reverse engineer the entire algorithm to know this value.
+    return accumulator == 180;
 }
 
-int main() {
-    printf("--- Credential Check ---\\n");
-    check_credentials("guest");
-    check_credentials("admin_user_secret");
+int main(int argc, char *argv[]) {
+    // Check if a command-line argument was provided.
+    if (argc != 2) {
+        // --- Target for String Encryption ---
+        printf("Usage: %s <license_key>\\n", argv[0]);
+        printf("Please provide a license key to validate.\\n");
+        return 1;
+    }
 
-    printf("\\n--- Data Processing ---\\n");
-    int numbers[] = {5, 25, 75, -3};
-    int final_result = process_data(numbers, 4);
-    printf("Final calculation result: %d\\n", final_result);
+    char* user_key = argv[1];
+    printf("--- License Key Validation ---\\n");
+    printf("Validating key: '%s'\\n", user_key);
+
+    // Test the user-provided key
+    if (validate_license(user_key)) {
+        // This success message should be hidden
+        printf("Result: License validation SUCCESSFUL!\\n");
+    } else {
+        // This failure message should be hidden
+        printf("Result: License validation FAILED.\\n");
+    }
+    
+    // The correct key is "CHAKRA-OBFUSCATOR-V1", but an attacker won't know that.
 
     return 0;
 }`;
         
-        const backendUrl = "https://chakravyuha-backend.onrender.com:3001";
-        // const backendUrl = "http://localhost:3001"; // For local testing
-
+        // const backendUrl = "http://localhost:3001"; // For local developement
+        const backendUrl = "https://chakravyuha-backend.onrender.com";
         window.onload = function () {
             if (typeof CodeMirror === 'undefined') {
                 document.body.innerHTML = "<h1>Error: Could not load the code editor.</h1>";
@@ -660,7 +735,6 @@ int main() {
             const pdfBtn = document.getElementById('download-pdf-btn');
             const cfgBtn = document.getElementById('view-cfg-btn');
 
-            // Setup binary and PDF download buttons
             binaryBtn.href = `${backendUrl}${result.downloadPath}`;
             binaryBtn.classList.remove('disabled');
 
